@@ -22,19 +22,6 @@ import kotlin.jvm.java
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    @Provides
-    fun provideProfileService(retrofit: Retrofit): ProfileService =
-        retrofit.create(ProfileService::class.java)
-
-    @Provides
-    fun providePostDailyService(retrofit: Retrofit): PostDailyService =
-        retrofit.create(PostDailyService::class.java)
-
-    @Provides
-    fun provideMyService(retrofit: Retrofit): MyService =
-        retrofit.create(MyService::class.java)
-
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =
@@ -62,12 +49,7 @@ object NetworkModule {
             .build()
     }
 
-//    @Provides   // 예시 Service 주입
-//    @Singleton
-//    fun provideExampleService(retrofit: Retrofit): ExampleService =
-//        retrofit.create(ExampleService::class.java)
-
-    @Provides   // 예시 Service 주입
+    @Provides
     @Singleton
     fun provideHomeService(retrofit: Retrofit): HomeService =
         retrofit.create(HomeService::class.java)
@@ -75,4 +57,16 @@ object NetworkModule {
     @Provides
     fun provideDetailService(retrofit: Retrofit): DetailService =
         retrofit.create(DetailService::class.java)
+
+    @Provides
+    fun provideProfileService(retrofit: Retrofit): ProfileService =
+        retrofit.create(ProfileService::class.java)
+
+    @Provides
+    fun providePostDailyService(retrofit: Retrofit): PostDailyService =
+        retrofit.create(PostDailyService::class.java)
+
+    @Provides
+    fun provideMyService(retrofit: Retrofit): MyService =
+        retrofit.create(MyService::class.java)
 }

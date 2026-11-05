@@ -269,3 +269,45 @@ Postman CLI is installed on this device, and can be used for API Engineering wor
 - 권한이 없으면 해당 기능을 실행하지 않는다.
 - 대략적 위치만 허용되어도 가능한 범위에서 위치를 조회한다.
 - 시스템이 재요청을 차단한 권한창을 강제로 띄우지 않는다.
+
+# mjHackathon Android 개발 지침
+
+## 화면설계서와 플로우
+
+- 화면 구현·수정 전 [화면별 명세와 이동 흐름](./SCREEN-FLOW.md)을 읽는다. 제공된 WF-01~WF-05b 화면설계서와 확정된 Dev Handoff를 정리한 문서다.
+- 화면명은 `profileScreen`(WF-01), `home`(WF-02), `detail`(WF-03), `postDaily`(WF-04), `my`(WF-05)로 통일한다. WF-05b는 `my`의 빈 상태이며 별도 화면이 아니다.
+- 하단 메뉴는 `동네 탐험 → home`, `나의 유학 일기 → my`, `내 정보 → profileScreen`으로 연결한다.
+- 핵심 흐름은 `profileScreen → home → detail → 기본 카메라 촬영·사용 확인 → postDaily → my`다. `detail`의 패스는 `home`, `postDaily`의 작성 취소는 `detail`로 돌아간다.
+- 설계서 본문과 확정된 Dev Handoff가 다르면 확정본을 적용한다. 세부 우선순위와 미확정 항목은 `SCREEN-FLOW.md`를 따른다. `AGENTS-wireframe-review.md`는 과거 교체 검토본이므로 이번 화면 명칭·플로우의 기준으로 사용하지 않는다.
+- 아래 내비게이션 파일 지도와 미완료 항목은 기존 코드 안내다. 실제 구현 여부는 코드를 확인하고, 목표 화면 동작은 `SCREEN-FLOW.md`를 기준으로 판단한다.
+
+## 공통 컴포넌트 컨벤션
+
+- 클릭 가능한 컴포넌트는 `core.util.noRippleClickable`의 `Modifier.noRippleClickable()`을 사용해 ripple 효과를 제거한다.
+- 아이콘은 `painterResource(R.drawable.<리소스명>)`으로 기존 drawable 리소스를 불러온다.
+- 공통 컴포넌트는 `core/designsystem/component/`에 두고 표시 상태별 Preview를 같은 파일에 작성한다.
+
+## 내비게이션 파일 지도
+
+아래 경로는 `app/src/main/java/com/cookandroid/mjhackathon/` 기준이다.
+
+| 파일 | 변경할 때 확인할 책임 |
+| --- | --- |
+| `presentation/main/MainActivity.kt` | 앱 진입점. 테마 안에서 `rememberMainAppState()`를 호출하고 `Scaffold`의 `innerPadding`을 `MainNavHost`로 전달한다. 실제 패키지는 `com.cookandroid.mjhackathon`이다. 패키지를 옮길 때는 Manifest의 `.MainActivity`도 함께 맞춘다. |
+| `presentation/main/navigation/MainAppState.kt` | 앱의 `NavHostController`를 보관한다. 화면 이동에는 이 컨트롤러를 재사용한다. |
+| `core/navigation/Destination.kt` | 직렬화 가능한 목적지 타입과 이동 인자를 정의한다. 현재 `Home`과 `Detail`은 인자가 없는 `@Serializable data object`다. |
+| `presentation/main/navigation/MainNavHost.kt` | 시작 목적지 `Home`, 목적지 등록, 이동과 복귀, 300ms 슬라이드 전환을 관리한다. 홈에서 `navigate(Detail)`로 이동하고 상세에서 `popBackStack()`으로 돌아온다. |
+| `presentation/home/HomeScreen.kt`, `presentation/detail/DetailScreen.kt` | 각 파일에 Route와 Screen을 함께 둔다. Route는 ViewModel과 UI를 연결하고 Screen은 상태를 표시하고 사용자 이벤트를 콜백으로 전달한다. |
+
+## 화면을 구현할 때
+
+- 같은 기능의 Screen, UiState, ViewModel은 `presentation/<기능>/`에 둔다. 기존 홈과 상세에서는 ViewModel이 해당 기능의 Repository를 주입받아 `uiState`를 공개한다.
+- Route에서 기본 인자 `hiltViewModel()`로 ViewModel을 얻고 `collectAsStateWithLifecycle()`로 상태를 읽는다. Screen은 UiState, Modifier, 콜백을 받아 Preview에서도 독립적으로 호출할 수 있게 한다.
+- 홈의 클릭은 `HomeScreen.onNavigateToDetail → HomeRoute.navigateToDetail → MainNavHost`, 상세의 뒤로가기는 `DetailScreen.onNavigateToBack → DetailRoute.navigateToBack → MainNavHost` 순서로 연결한다. `navigate`와 `popBackStack`은 그래프에서 호출한다.
+- Route에서 `Modifier.padding(paddingValues)`를 Screen에 전달한다. Screen은 받은 Modifier를 최상위 UI에 적용해 시스템 영역 여백이 한 번만 반영되게 한다.
+- 새 화면은 `Destination.kt`에 목적지를 선언하고, 기능 패키지에 Route와 Screen을 만든 뒤, `MainNavHost`에 `composable<목적지>`와 진입 콜백을 연결한다. 특정 항목을 여는 요구가 생기면 실제 ID 타입을 확인해 목적지를 `@Serializable data class`로 바꾸고 호출부와 수신부를 함께 수정한다.
+
+<!-- postman-cli:installation:start -->
+Postman CLI is installed on this device, and can be used for API Engineering work.
+<!-- postman-cli:installation:end -->
+

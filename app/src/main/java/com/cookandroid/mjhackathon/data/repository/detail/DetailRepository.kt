@@ -1,7 +1,8 @@
 package com.cookandroid.mjhackathon.data.repository.detail
 
-import com.cookandroid.mjhackathon.data.dto.detail.response.ExampleResponse
+import com.cookandroid.mjhackathon.data.model.detail.QuestDetail
 
 interface DetailRepository {
-    suspend fun getDetail(): ExampleResponse
+    suspend fun getQuestDetail(questId: String): QuestDetail
+    suspend fun passQuest(questId: String)
 }

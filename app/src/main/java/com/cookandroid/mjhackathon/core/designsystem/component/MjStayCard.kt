@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
@@ -43,20 +44,26 @@ fun MjStayCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = colors.bgInverse.copy(alpha = 0.08f),
+                spotColor = colors.bgInverse.copy(alpha = 0.08f),
+            )
             .clip(RoundedCornerShape(20.dp))
-            .background(colors.actionPrimary)
+            .background(colors.bgSurface)
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = dDay,
-            color = colors.textOnBrand,
+            color = colors.textPrimary,
             style = MjHackathonTheme.typography.display,
         )
 
         Text(
             text = "${data.startDate} – ${data.endDate}",
-            color = colors.textOnBrand,
+            color = colors.textSecondary,
             style = MjHackathonTheme.typography.body2,
         )
 
@@ -65,7 +72,7 @@ fun MjStayCard(
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(RoundedCornerShape(50))
-                .background(colors.bgSurface)
+                .background(colors.bgMuted)
                 .semantics {
                     progressBarRangeInfo = ProgressBarRangeInfo(progress, 0f..1f)
                 },
@@ -76,14 +83,14 @@ fun MjStayCard(
                         .fillMaxWidth(progress)
                         .height(8.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(colors.bgAccent),
+                        .background(colors.bgInverse),
                 )
             }
         }
     }
 }
 
-@Preview(name = "MjStayCard - 목업", widthDp = 344, showBackground = true)
+@Preview(name = "MjStayCard - 목업", widthDp = 344, showBackground = true, backgroundColor = 0xFFF6F5F2)
 @Composable
 private fun MjStayCardPreview() {
     MjHackathonTheme {
@@ -91,7 +98,7 @@ private fun MjStayCardPreview() {
     }
 }
 
-@Preview(name = "MjStayCard - 시작", widthDp = 344, showBackground = true)
+@Preview(name = "MjStayCard - 시작", widthDp = 344, showBackground = true, backgroundColor = 0xFFF6F5F2)
 @Composable
 private fun MjStayCardStartPreview() {
     MjHackathonTheme {
@@ -102,7 +109,7 @@ private fun MjStayCardStartPreview() {
     }
 }
 
-@Preview(name = "MjStayCard - 귀국 당일", widthDp = 344, showBackground = true)
+@Preview(name = "MjStayCard - 귀국 당일", widthDp = 344, showBackground = true, backgroundColor = 0xFFF6F5F2)
 @Composable
 private fun MjStayCardReturnPreview() {
     MjHackathonTheme {
@@ -113,7 +120,7 @@ private fun MjStayCardReturnPreview() {
     }
 }
 
-@Preview(name = "MjStayCard - 귀국 이후", widthDp = 344, showBackground = true)
+@Preview(name = "MjStayCard - 귀국 이후", widthDp = 344, showBackground = true, backgroundColor = 0xFFF6F5F2)
 @Composable
 private fun MjStayCardAfterReturnPreview() {
     MjHackathonTheme {

@@ -6,13 +6,13 @@ import kotlinx.serialization.Serializable
 data object Home
 
 @Serializable
-data object Detail
+data class Detail(val questId: String)
 
 @Serializable
 data class Profile(val isInitialSetup: Boolean = false)
 
 @Serializable
-data object PostDaily
+data class PostDaily(val questId: String, val photoUri: String)
 
 @Serializable
 data object My

@@ -21,19 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cookandroid.mjhackathon.R
 import com.cookandroid.mjhackathon.core.designsystem.theme.MjHackathonTheme
+import coil3.compose.SubcomposeAsyncImage
 
 enum class MjDiaryCardState {
     Did,
     Missed,
 }
 
-/** 보기 전용 일기 카드. 사진을 생략하면 갤러리 아이콘을 표시한다. */
+/** 보기 전용 일기 카드. imageUri는 촬영 사진 URI 또는 서버 이미지 URL을 받는다. */
 @Composable
 fun MjDiaryCard(
     state: MjDiaryCardState,
@@ -43,6 +45,7 @@ fun MjDiaryCard(
     memo: String,
     modifier: Modifier = Modifier,
     @DrawableRes imageRes: Int? = null,
+    imageUri: String? = null,
 ) {
     val colors = MjHackathonTheme.colors
     val typography = MjHackathonTheme.typography
@@ -62,13 +65,17 @@ fun MjDiaryCard(
                 .background(colors.bgMuted),
             contentAlignment = Alignment.Center,
         ) {
-            if (imageRes == null) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_gallery),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = colors.iconSecondary,
+            if (!imageUri.isNullOrBlank() && !LocalInspectionMode.current) {
+                SubcomposeAsyncImage(
+                    model = imageUri,
+                    contentDescription = "일기에 남긴 경험 사진",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    loading = { DiaryPhotoPlaceholder() },
+                    error = { DiaryPhotoPlaceholder() },
                 )
+            } else if (imageRes == null) {
+                DiaryPhotoPlaceholder()
             } else {
                 Image(
                     painter = painterResource(imageRes),
@@ -106,14 +113,26 @@ fun MjDiaryCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = memo,
-                color = colors.textSecondary,
-                style = typography.body2,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (memo.isNotEmpty()) {
+                Text(
+                    text = memo,
+                    color = colors.textSecondary,
+                    style = typography.body2,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun DiaryPhotoPlaceholder() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Icon(
+            painter = painterResource(R.drawable.ic_gallery),
+            contentDescription = null,
+            modifier = Modifier.size(28.dp),
+            tint = MjHackathonTheme.colors.iconSecondary,
+        )
     }
 }
 
@@ -184,5 +203,24 @@ private fun MjDiaryCardMissedPreview() {
                 memo = "한 줄 메모",
             )
         }
+    }
+}
+
+@Preview(name = "MjDiaryCard - 메모 없음", widthDp = 360, showBackground = true)
+@Composable
+private fun MjDiaryCardNoMemoPreview() {
+    MjHackathonTheme {
+        MjDiaryCard(state = MjDiaryCardState.Did, date = "2026.11.05", location = "영천시장",
+            title = "시장에서 만나는 첫 번째 한입", memo = "", modifier = Modifier.padding(20.dp))
+    }
+}
+
+@Preview(name = "MjDiaryCard - 메모 원문 표시", widthDp = 360, showBackground = true)
+@Composable
+private fun MjDiaryCardFullMemoPreview() {
+    MjHackathonTheme {
+        MjDiaryCard(state = MjDiaryCardState.Missed, date = "2026.11.05", location = "영천시장",
+            title = "시장에서 만나는 첫 번째 한입", memo = "오늘은 시장이 문을 닫아 다음에 다시 오기로 했다.\n다음 방문이 기대된다.",
+            modifier = Modifier.padding(20.dp))
     }
 }

@@ -95,7 +95,7 @@ fun MjQuestCard(
             Text(
                 text = title,
                 color = colors.textPrimary,
-                style = typography.body2Strong,
+                style = typography.body1Strong,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
