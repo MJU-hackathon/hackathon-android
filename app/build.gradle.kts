@@ -29,6 +29,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BASE_URL", properties.getProperty("BASE_URL"))
+
+        manifestPlaceholders["MAPS_API_KEY"] =
+            properties.getProperty("MAPS_API_KEY")
+                ?.takeIf { it.isNotBlank() }
+                ?: error("local.properties에 MAPS_API_KEY를 설정해주세요.")
     }
 
     buildTypes {
@@ -52,6 +57,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.runtime.annotation)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -74,6 +80,19 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+// CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+// Location
+    implementation(libs.google.play.services.location)
+
+// Google Maps
+    implementation(libs.google.maps.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -2,102 +2,119 @@ package com.cookandroid.mjhackathon.core.designsystem.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.cookandroid.mjhackathon.R
 
 @Immutable
 data class MjHackathonTypography(
+    val display: TextStyle,
+    val title1: TextStyle,
+    val title2: TextStyle,
+    val title3: TextStyle,
     val body1: TextStyle,
+    val body1Strong: TextStyle,
     val body2: TextStyle,
-    val body3: TextStyle,
-    val body4: TextStyle,
-    val body5: TextStyle,
-    val body6: TextStyle,
-    val head1: TextStyle,
-    val head2: TextStyle,
-    val head3: TextStyle,
-    val head4: TextStyle
+    val body2Strong: TextStyle,
+    val buttonL: TextStyle,
+    val buttonM: TextStyle,
+    val caption: TextStyle,
+    val captionStrong: TextStyle,
 )
 
-private val PretendardFontFamily = FontFamily(
-//    Font(R.font.pretendard_medium, weight = FontWeight.Medium),
-//    Font(R.font.pretendard_bold, weight = FontWeight.Bold),
+private fun typographyStyle(
+    fontSize: Int,
+    lineHeight: Int,
+    fontWeight: FontWeight,
+    letterSpacing: Float = 0f,
+): TextStyle = TextStyle(
+    fontFamily = NotoSansFontFamily,
+    fontSize = fontSize.sp,
+    lineHeight = lineHeight.sp,
+    fontWeight = fontWeight,
+    letterSpacing = letterSpacing.sp,
+    platformStyle = PlatformTextStyle(
+        includeFontPadding = false,
+    ),
+    lineHeightStyle = LineHeightStyle(
+        alignment = LineHeightStyle.Alignment.Center,
+        trim = LineHeightStyle.Trim.None,
+    ),
+)
+
+private val NotoSansFontFamily = FontFamily(
+    Font(R.font.notosans_regular, weight = FontWeight.Normal),
+    Font(R.font.notosans_medium, weight = FontWeight.Medium),
+    Font(R.font.notosans_bold, weight = FontWeight.Bold),
 )
 
 val defaultMjHackathonTypography = MjHackathonTypography(
-    body1 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 24.sp,
-        fontSize = 16.sp,
-        letterSpacing = 0.01.em
-    ),
-    body2 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 22.5.sp,
-        fontSize = 15.sp,
-        letterSpacing = 0.01.em
-    ),
-    body3 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 18.2.sp,
-        fontSize = 13.sp,
-        letterSpacing = 0.01.em
-    ),
-    body4 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 18.sp,
-        fontSize = 12.sp,
-        letterSpacing = 0.01.em
-    ),
-    body5 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 16.5.sp,
-        fontSize = 11.sp,
-        letterSpacing = 0.01.em
-    ),
-    body6 = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 12.sp,
-        fontSize = 8.sp,
-        letterSpacing = 0.01.em
-    ),
-    head1 = TextStyle(
-        fontFamily = PretendardFontFamily,
+    display = typographyStyle(
+        fontSize = 36,
+        lineHeight = 44,
         fontWeight = FontWeight.Bold,
-        lineHeight = 33.sp,
-        fontSize = 22.sp,
-        letterSpacing = 0.05.em
     ),
-    head2 = TextStyle(
-        fontFamily = PretendardFontFamily,
+    title1 = typographyStyle(
+        fontSize = 24,
+        lineHeight = 32,
         fontWeight = FontWeight.Bold,
-        lineHeight = 24.sp,
-        fontSize = 16.sp,
-        letterSpacing = 0.05.em
     ),
-    head3 = TextStyle(
-        fontFamily = PretendardFontFamily,
+    title2 = typographyStyle(
+        fontSize = 20,
+        lineHeight = 28,
         fontWeight = FontWeight.Bold,
-        lineHeight = 21.sp,
-        fontSize = 14.sp,
-        letterSpacing = 0.05.em
     ),
-    head4 = TextStyle(
-        fontFamily = PretendardFontFamily,
+    title3 = typographyStyle(
+        fontSize = 18,
+        lineHeight = 26,
         fontWeight = FontWeight.Bold,
-        lineHeight = 18.sp,
-        fontSize = 12.sp,
-        letterSpacing = 0.05.em
-    )
+    ),
+    body1 = typographyStyle(
+        fontSize = 16,
+        lineHeight = 24,
+        fontWeight = FontWeight.Normal,
+    ),
+    body1Strong = typographyStyle(
+        fontSize = 16,
+        lineHeight = 24,
+        fontWeight = FontWeight.Medium,
+    ),
+    body2 = typographyStyle(
+        fontSize = 14,
+        lineHeight = 20,
+        fontWeight = FontWeight.Normal,
+    ),
+    body2Strong = typographyStyle(
+        fontSize = 14,
+        lineHeight = 20,
+        fontWeight = FontWeight.Medium,
+    ),
+    buttonL = typographyStyle(
+        fontSize = 16,
+        lineHeight = 24,
+        fontWeight = FontWeight.Bold,
+    ),
+    buttonM = typographyStyle(
+        fontSize = 14,
+        lineHeight = 20,
+        fontWeight = FontWeight.Bold,
+    ),
+    caption = typographyStyle(
+        fontSize = 12,
+        lineHeight = 16,
+        fontWeight = FontWeight.Normal,
+    ),
+    captionStrong = typographyStyle(
+        fontSize = 12,
+        lineHeight = 16,
+        fontWeight = FontWeight.Medium,
+    ),
 )
 
 val LocalMjHackathonTypographyProvider = staticCompositionLocalOf {

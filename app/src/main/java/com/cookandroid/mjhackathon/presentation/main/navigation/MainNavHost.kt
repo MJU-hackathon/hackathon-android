@@ -9,8 +9,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.cookandroid.mjhackathon.core.navigation.Detail
 import com.cookandroid.mjhackathon.core.navigation.Home
+import com.cookandroid.mjhackathon.core.navigation.My
+import com.cookandroid.mjhackathon.core.navigation.PostDaily
+import com.cookandroid.mjhackathon.core.navigation.Profile
+import com.cookandroid.mjhackathon.core.navigation.Splash
 import com.cookandroid.mjhackathon.presentation.detail.DetailRoute
 import com.cookandroid.mjhackathon.presentation.home.HomeRoute
+import com.cookandroid.mjhackathon.presentation.my.MyRoute
+import com.cookandroid.mjhackathon.presentation.postDaily.PostDailyRoute
+import com.cookandroid.mjhackathon.presentation.profile.ProfileRoute
+import com.cookandroid.mjhackathon.presentation.splash.SplashRoute
 
 @Composable
 fun MainNavHost(
@@ -47,11 +55,27 @@ fun MainNavHost(
             )
         },
     ){
+        composable<Splash> {
+            SplashRoute()
+        }
+
         composable<Home>{
             HomeRoute(
                 paddingValues = paddingValues,
                 navigateToDetail = { navController.navigate(Detail) },
             )
+        }
+
+        composable<Profile> {
+            ProfileRoute(paddingValues = paddingValues)
+        }
+
+        composable<PostDaily> {
+            PostDailyRoute(paddingValues = paddingValues)
+        }
+
+        composable<My> {
+            MyRoute(paddingValues = paddingValues)
         }
 
         composable<Detail>{

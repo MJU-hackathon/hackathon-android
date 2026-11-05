@@ -3,6 +3,9 @@ package com.cookandroid.mjhackathon.data.network
 import com.cookandroid.mjhackathon.BuildConfig
 import com.cookandroid.mjhackathon.data.service.detail.DetailService
 import com.cookandroid.mjhackathon.data.service.home.HomeService
+import com.cookandroid.mjhackathon.data.service.profile.ProfileService
+import com.cookandroid.mjhackathon.data.service.postDaily.PostDailyService
+import com.cookandroid.mjhackathon.data.service.my.MyService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -19,6 +22,18 @@ import kotlin.jvm.java
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides
+    fun provideProfileService(retrofit: Retrofit): ProfileService =
+        retrofit.create(ProfileService::class.java)
+
+    @Provides
+    fun providePostDailyService(retrofit: Retrofit): PostDailyService =
+        retrofit.create(PostDailyService::class.java)
+
+    @Provides
+    fun provideMyService(retrofit: Retrofit): MyService =
+        retrofit.create(MyService::class.java)
 
     @Provides
     @Singleton
