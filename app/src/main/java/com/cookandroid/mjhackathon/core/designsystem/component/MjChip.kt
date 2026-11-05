@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,7 +46,7 @@ fun MjChip(
                 if (selected) MjHackathonTheme.colors.bgBrandSubtle else MjHackathonTheme.colors.bgSurface,
             )
             .border(
-                width = if (selected) 2.dp else 1.dp,
+                width = if (selected) 1.5.dp else 1.dp,
                 color = if (selected) MjHackathonTheme.colors.borderBrand else MjHackathonTheme.colors.borderDefault,
                 shape = shape,
             )
@@ -53,8 +54,9 @@ fun MjChip(
                 this.selected = selected
                 role = Role.Checkbox
             }
+            .height(40.dp)
             .noRippleClickable(onClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

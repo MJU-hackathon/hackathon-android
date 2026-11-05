@@ -27,7 +27,7 @@ fun SplashScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
+            .background(MjHackathonTheme.colors.bgAccent),
         contentAlignment = Alignment.Center,
     ) {
         Image(

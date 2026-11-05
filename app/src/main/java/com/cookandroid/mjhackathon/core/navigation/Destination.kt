@@ -9,7 +9,7 @@ data object Home
 data object Detail
 
 @Serializable
-data object Profile
+data class Profile(val isInitialSetup: Boolean = false)
 
 @Serializable
 data object PostDaily

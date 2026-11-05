@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProfileState())
     val uiState = _uiState.asStateFlow()
+
+    fun updateState(state: ProfileState) {
+        _uiState.value = state
+    }
 }
