@@ -61,7 +61,7 @@ fun DetailRoute(
     viewModel: DetailViewModel = hiltViewModel(),
     navigateToBack: () -> Unit,
     onQuestPassed: (String) -> Unit,
-    navigateToPostDaily: (String, String) -> Unit,
+    navigateToPostDaily: (String, String, String, String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var cameraError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -82,8 +82,11 @@ fun DetailRoute(
         onNavigateToBack = navigateToBack,
         onRetry = viewModel::loadQuest,
         onPass = viewModel::passQuest,
-        onRecordPhoto = { cameraError = null; camera.launch() },
+        onRecordPhoto = {
+            if (viewModel.uiState.value.canAct) { cameraError = null; camera.launch() }
+        },
         onOpenMap = { quest ->
+            if (!quest.hasMapCoordinates) return@DetailScreen
             val geoUri = Uri.parse("geo:${quest.latitude},${quest.longitude}?q=" +
                     Uri.encode("${quest.latitude},${quest.longitude}(${quest.placeName})"))
             try {
@@ -133,13 +136,16 @@ fun DetailScreen(
                     DetailHeroImage(quest.imageUrl)
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            text = quest.category,
+                            text = if (quest.estimatedMinutes > 0) "${quest.category} · ${quest.estimatedMinutes}분" else quest.category,
                             modifier = Modifier.background(colors.bgAccentSubtle, RoundedCornerShape(6.dp))
                                 .padding(horizontal = 8.dp, vertical = 2.dp),
                             color = colors.textAccent,
                             style = typography.captionStrong,
                         )
                         Text(quest.title, color = colors.textPrimary, style = typography.title2)
+                        if (quest.reason.isNotBlank()) {
+                            Text(quest.reason, color = colors.textBrand, style = typography.body2)
+                        }
                         Text(quest.description, color = colors.textSecondary, style = typography.body2)
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -154,13 +160,23 @@ fun DetailScreen(
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("장소", color = colors.textPrimary, style = typography.body1Strong)
-                        MjMapCard(
-                            latitude = quest.latitude,
-                            longitude = quest.longitude,
-                            placeName = quest.placeName,
-                            address = quest.address,
-                            onClick = { onOpenMap(quest) },
-                        )
+                        val latitude = quest.latitude
+                        val longitude = quest.longitude
+                        if (quest.hasMapCoordinates && latitude != null && longitude != null) {
+                            MjMapCard(
+                                latitude = latitude, longitude = longitude,
+                                placeName = quest.placeName, address = quest.address.orEmpty(),
+                                onClick = { onOpenMap(quest) },
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(quest.placeName, color = colors.textPrimary, style = typography.body2)
+                                quest.address?.takeIf { it.isNotBlank() }?.let {
+                                    Text(it, color = colors.textSecondary, style = typography.caption)
+                                }
+                                Text("이 장소의 지도 위치 정보가 없어요.", color = colors.textSecondary, style = typography.caption)
+                            }
+                        }
                     }
                 }
                 Column(
@@ -170,7 +186,10 @@ fun DetailScreen(
                     (uiState.passError ?: cameraError)?.let {
                         Text(it, color = colors.textError, style = typography.caption)
                     }
-                    val enabled = !uiState.isPassing && !isCameraBusy && uiState.passedQuestId == null
+                    if (quest.status != "AVAILABLE") {
+                        Text("이미 처리됐거나 진행할 수 없는 퀘스트예요.", color = colors.textSecondary, style = typography.caption)
+                    }
+                    val enabled = uiState.canAct && !isCameraBusy
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier.width(112.dp)
@@ -237,9 +256,14 @@ class DetailPreviewStates : PreviewParameterProvider<DetailUiState> {
         description = "서대문 영천시장에서 한국 시장 음식을 직접 골라 주문해 보는 퀘스트예요.",
         steps = listOf("시장에서 먹어보고 싶은 음식 찾기", "한국어로 주문해 보기", "음식이나 시장 풍경 사진 찍기"),
         placeName = "영천시장", address = "서대문구 영천동", latitude = 37.5704, longitude = 126.9624,
+        estimatedMinutes = 30, reason = "한국 음식에 관심이 있는 당신에게 추천해요.",
     )
     override val values = sequenceOf(
         DetailUiState(isLoading = false, quest = sample),
+        DetailUiState(isLoading = false, quest = sample.copy(address = null, latitude = null, longitude = null)),
+        DetailUiState(isLoading = false, quest = sample.copy(status = "SKIPPED")),
+        DetailUiState(isLoading = false, quest = sample, actionsUnavailable = true,
+            passError = "이미 처리했거나 날짜가 지난 퀘스트예요."),
         DetailUiState(),
         DetailUiState(isLoading = false, loadError = "퀘스트를 불러오지 못했어요."),
         DetailUiState(isLoading = false, quest = sample, isPassing = true),

@@ -9,4 +9,9 @@ data class DetailUiState(
     val isPassing: Boolean = false,
     val passError: String? = null,
     val passedQuestId: String? = null,
-)
+    val actionsUnavailable: Boolean = false,
+) {
+    val canAct: Boolean
+        get() = !isLoading && quest?.status == "AVAILABLE" && !isPassing &&
+            !actionsUnavailable && passedQuestId == null
+}

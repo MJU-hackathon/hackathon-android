@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -67,7 +68,10 @@ fun PostDailyRoute(
     }
     PostDailyScreen(
         uiState = uiState,
-        modifier = Modifier.padding(paddingValues),
+        // Scaffold에서 적용한 시스템 여백은 imePadding에서 다시 계산하지 않는다.
+        modifier = Modifier
+            .padding(paddingValues)
+            .consumeWindowInsets(paddingValues),
         onNavigateToBack = viewModel::cancelWriting,
         onResultSelected = viewModel::selectResult,
         onMemoChange = viewModel::updateMemo,
@@ -90,30 +94,49 @@ fun PostDailyScreen(
 ) {
     val colors = MjHackathonTheme.colors
     val typography = MjHackathonTheme.typography
-    Column(modifier.fillMaxSize().background(colors.bgCanvas).imePadding()) {
+    Column(modifier
+        .fillMaxSize()
+        .background(colors.bgCanvas)
+        .imePadding()) {
         MjAppBar(type = MjAppBarType.Back, text = "일기 작성", onBackClick = onNavigateToBack)
         when {
-            uiState.isLoading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            uiState.isLoading -> Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(color = colors.actionPrimary)
             }
+
             uiState.loadError != null -> Column(
-                modifier = Modifier.weight(1f).fillMaxWidth().padding(20.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
             ) {
                 Text(uiState.loadError, style = typography.body2, color = colors.textSecondary)
                 MjButton(text = "다시 시도", onClick = onRetry, enabled = !uiState.isBusy)
             }
+
             else -> Column(
-                modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 24.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 MjQuestSummary(
                     title = uiState.questTitle,
                     location = uiState.location,
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
                         .border(1.dp, colors.borderDefault, RoundedCornerShape(16.dp)),
                 )
+
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("퀘스트, 해봤나요?", style = typography.body2Strong, color = colors.textPrimary)
                     MjResultSelector(
@@ -131,6 +154,7 @@ fun PostDailyScreen(
                         },
                     )
                 }
+
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("경험 사진", style = typography.body2Strong, color = colors.textPrimary)
@@ -138,10 +162,13 @@ fun PostDailyScreen(
                     }
                     CapturedDiaryPhoto(uiState.photoUri, uiState.hasPhoto, onPhotoLoadError)
                     if (!uiState.hasPhoto) {
-                        Text("사진이 없어요. 상세 화면으로 돌아가 다시 촬영해 주세요.",
-                            color = colors.textError, style = typography.caption)
+                        Text(
+                            "사진이 없어요. 상세 화면으로 돌아가 다시 촬영해 주세요.",
+                            color = colors.textError, style = typography.caption
+                        )
                     }
                 }
+
                 MjTextField(
                     value = uiState.memo,
                     onValueChange = { if (!uiState.isBusy) onMemoChange(it) },
@@ -152,10 +179,19 @@ fun PostDailyScreen(
             }
         }
         Column(
-            modifier = Modifier.fillMaxWidth().background(colors.bgSurface).padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.bgSurface)
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            uiState.saveError?.let { Text(it, color = colors.textError, style = typography.caption) }
+            uiState.saveError?.let {
+                Text(
+                    it,
+                    color = colors.textError,
+                    style = typography.caption
+                )
+            }
             MjButton(
                 text = when {
                     uiState.isSaving -> "저장 중…"
@@ -173,8 +209,11 @@ fun PostDailyScreen(
 private fun CapturedDiaryPhoto(photoUri: String, hasPhoto: Boolean, onLoadError: () -> Unit) {
     val colors = MjHackathonTheme.colors
     Box(
-        modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f)
-            .clip(RoundedCornerShape(16.dp)).background(colors.bgMuted),
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(4f / 3f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.bgMuted),
         contentAlignment = Alignment.Center,
     ) {
         if (LocalInspectionMode.current || !hasPhoto) {
@@ -182,9 +221,18 @@ private fun CapturedDiaryPhoto(photoUri: String, hasPhoto: Boolean, onLoadError:
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(painterResource(R.drawable.ic_gallery), null, Modifier.size(28.dp), tint = colors.iconSecondary)
-                Text(if (hasPhoto) "촬영된 사진" else "사진 없음", style = MjHackathonTheme.typography.caption,
-                    color = colors.textSecondary)
+                Icon(
+                    painterResource(R.drawable.ic_gallery),
+                    null,
+                    Modifier.size(28.dp),
+                    tint = colors.iconSecondary
+                )
+
+                Text(
+                    if (hasPhoto) "촬영된 사진" else "사진 없음",
+                    style = MjHackathonTheme.typography.caption,
+                    color = colors.textSecondary
+                )
             }
         } else {
             AsyncImage(
@@ -207,9 +255,18 @@ class PostDailyPreviewStates : PreviewParameterProvider<PostDailyUiState> {
         sample,
         sample.copy(result = DiaryResult.DID, memo = "처음 먹어본 호떡, 생각보다 달았다."),
         sample.copy(result = DiaryResult.MISSED),
+        sample.copy(
+            result = DiaryResult.DID,
+            saveBlocked = true,
+            saveError = "이미 기록된 퀘스트예요. 홈에서 다시 확인해 주세요."
+        ),
         sample.copy(result = DiaryResult.DID),
         sample.copy(result = DiaryResult.DID, isSaving = true),
-        sample.copy(result = DiaryResult.DID, memo = "입력한 메모는 유지돼요", saveError = "저장하지 못했어요. 다시 시도해 주세요."),
+        sample.copy(
+            result = DiaryResult.DID,
+            memo = "입력한 메모는 유지돼요",
+            saveError = "저장하지 못했어요. 다시 시도해 주세요."
+        ),
         sample.copy(result = DiaryResult.DID, hasPhoto = false),
         sample.copy(isLoading = true),
         sample.copy(loadError = "퀘스트 정보를 불러오지 못했어요."),
@@ -220,10 +277,13 @@ class PostDailyPreviewStates : PreviewParameterProvider<PostDailyUiState> {
 }
 
 @Preview(name = "일기 작성 - 상태별", widthDp = 360, heightDp = 850, showBackground = true)
+// 키보드로 줄어든 가용 높이 확인용. 실제 IME inset은 기기에서 확인한다.
+@Preview(name = "일기 작성 - 입력 중 작은 높이", widthDp = 360, heightDp = 480, showBackground = true)
 @Composable
 private fun PostDailyScreenPreview(@PreviewParameter(PostDailyPreviewStates::class) state: PostDailyUiState) {
     MjHackathonTheme {
-        PostDailyScreen(state, onNavigateToBack = {}, onResultSelected = {}, onMemoChange = {},
+        PostDailyScreen(
+            state, onNavigateToBack = {}, onResultSelected = {}, onMemoChange = {},
             onSave = {}, onRetry = {}, onPhotoLoadError = {})
     }
 }

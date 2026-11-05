@@ -11,6 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import java.time.Duration
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +51,23 @@ fun HomeRoute(
     navigateToProfile: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, viewModel) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.loadQuests()
+            while (true) {
+                val now = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
+                val midnight = now.toLocalDate().plusDays(1).atStartOfDay(now.zone)
+                delay(Duration.between(now, midnight).toMillis().coerceAtLeast(1L))
+                viewModel.loadQuests()
+            }
+        }
+    }
     HomeScreen(
         uiState = uiState,
         modifier = Modifier.padding(paddingValues),
         onNavigateToDetail = navigateToDetail,
+        onRetry = viewModel::loadQuests,
         onNavigateToDiary = navigateToDiary,
         onNavigateToProfile = navigateToProfile,
     )
@@ -59,6 +80,7 @@ fun HomeScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToDiary: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onRetry: () -> Unit = {},
 ) {
     val colors = MjHackathonTheme.colors
     Column(modifier = modifier.fillMaxSize().background(colors.bgCanvas)) {
@@ -82,13 +104,30 @@ fun HomeScreen(
                         color = colors.textPrimary,
                     )
                     Text(
-                        text = "오늘 남은 퀘스트 ${uiState.remainingQuestCount}/${HomeUiState.DAILY_QUEST_COUNT}",
+                        text = if (uiState.isLoading || uiState.errorMessage != null) ""
+                            else "오늘 남은 퀘스트 ${uiState.remainingQuestCount}/${HomeUiState.DAILY_QUEST_COUNT}",
                         style = MjHackathonTheme.typography.caption,
                         color = colors.textTertiary,
                     )
                 }
             }
-            if (uiState.quests.isEmpty()) {
+            if (uiState.isLoading) {
+                item(key = "loading") {
+                    Text("오늘의 퀘스트를 불러오고 있어요…", color = colors.textSecondary)
+                }
+            }
+            uiState.errorMessage?.let { message ->
+                item(key = "error") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(message, color = colors.textError)
+                        MjSmallButton(
+                            text = if (uiState.profileRequired) "프로필 설정하기" else "다시 시도",
+                            onClick = if (uiState.profileRequired) onNavigateToProfile else onRetry,
+                        )
+                    }
+                }
+            }
+            if (uiState.quests.isEmpty() && !uiState.isLoading && uiState.errorMessage == null) {
                 item(key = "empty") { MjQuestEmptyState() }
             } else {
                 items(uiState.quests, key = { it.id }) { quest ->
@@ -96,6 +135,9 @@ fun HomeScreen(
                         title = quest.title,
                         category = quest.category,
                         location = quest.location,
+                        imageUrl = quest.imageUrl,
+                        estimatedMinutes = quest.estimatedMinutes,
+                        reason = quest.reason,
                         onClick = { onNavigateToDetail(quest.id) },
                     )
                 }
@@ -115,12 +157,18 @@ fun HomeScreen(
 }
 
 class HomePreviewStates : PreviewParameterProvider<HomeUiState> {
-    override val values = (3 downTo 0).asSequence().map { count ->
+    override val values = sequenceOf(
+        HomeUiState(),
+        HomeUiState(isLoading = false, errorMessage = "서버에 연결할 수 없어요."),
+        HomeUiState(isLoading = false, errorMessage = "프로필을 먼저 저장해 주세요.", profileRequired = true),
+        HomeUiState.mock().copy(isLoading = true),
+        HomeUiState.mock().copy(errorMessage = "퀘스트를 새로 불러오지 못했어요."),
+    ) + (3 downTo 0).asSequence().map { count ->
         HomeUiState.mock().let { it.copy(quests = it.quests.take(count)) }
     }
 }
 
-@Preview(name = "홈 - 남은 퀘스트 3·2·1·0개", widthDp = 360, heightDp = 800, showBackground = true)
+@Preview(name = "홈 - 로딩·오류·남은 퀘스트", widthDp = 360, heightDp = 800, showBackground = true)
 @Composable
 private fun HomeScreenPreview(@PreviewParameter(HomePreviewStates::class) uiState: HomeUiState) {
     MjHackathonTheme {

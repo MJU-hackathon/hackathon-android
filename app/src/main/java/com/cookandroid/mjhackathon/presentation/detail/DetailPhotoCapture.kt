@@ -20,6 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.Instant
+import java.util.UUID
 
 internal data class DetailPhotoCapture(val isBusy: Boolean, val launch: () -> Unit)
 
@@ -27,16 +29,22 @@ internal data class DetailPhotoCapture(val isBusy: Boolean, val launch: () -> Un
 @Composable
 internal fun rememberDetailPhotoCapture(
     questId: String,
-    onPhotoCaptured: (String, String) -> Unit,
+    onPhotoCaptured: (String, String, String, String) -> Unit,
     onError: (String) -> Unit,
 ): DetailPhotoCapture {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingPath by rememberSaveable(questId) { mutableStateOf<String?>(null) }
+    var pendingDraftId by rememberSaveable(questId) { mutableStateOf<String?>(null) }
+    var pendingDraftStartedAt by rememberSaveable(questId) { mutableStateOf<String?>(null) }
     var preparing by remember(questId) { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         val path = pendingPath
+        val draftId = pendingDraftId
+        val draftStartedAt = pendingDraftStartedAt
         pendingPath = null
+        pendingDraftId = null
+        pendingDraftStartedAt = null
         if (path != null) {
             preparing = true
             scope.launch {
@@ -48,7 +56,7 @@ internal fun rememberDetailPhotoCapture(
                     }
                     if (valid) {
                         val uri = FileProvider.getUriForFile(context, "${context.packageName}.questphotos", file)
-                        onPhotoCaptured(questId, uri.toString())
+                        onPhotoCaptured(questId, uri.toString(), requireNotNull(draftId), requireNotNull(draftStartedAt))
                     } else if (success) {
                         onError("촬영한 사진을 확인하지 못했어요. 다시 시도해 주세요.")
                     }
@@ -75,6 +83,8 @@ internal fun rememberDetailPhotoCapture(
                         File.createTempFile("quest_", ".jpg", directory)
                     }
                     pendingPath = file.absolutePath
+                    pendingDraftId = UUID.randomUUID().toString()
+                    pendingDraftStartedAt = Instant.now().toString()
                     val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.questphotos", file)
                     launcher.launch(uri)
                 } catch (cancelled: CancellationException) {

@@ -142,8 +142,9 @@ fun MainNavHost(
                         ?.set(HomeViewModel.QUEST_RESULT_KEY, questId)
                     navController.popBackStack()
                 },
-                navigateToPostDaily = { questId, photoUri ->
-                    navController.navigate(PostDaily(questId = questId, photoUri = photoUri))
+                navigateToPostDaily = { questId, photoUri, draftId, draftStartedAt ->
+                    navController.navigate(PostDaily(questId = questId, photoUri = photoUri,
+                        draftId = draftId, draftStartedAt = draftStartedAt))
                 },
             )
         }

@@ -56,7 +56,11 @@ class MainActivity : ComponentActivity() {
             MjHackathonTheme {
                 val appState = rememberMainAppState()
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    // 화면의 시스템 여백 바깥에서도 앱바와 같은 배경을 그린다.
+                    containerColor = MjHackathonTheme.colors.bgCanvas,
+                ) { innerPadding ->
                     MainNavHost(
                         appState = appState,
                         paddingValues = innerPadding,

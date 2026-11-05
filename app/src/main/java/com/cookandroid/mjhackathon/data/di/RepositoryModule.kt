@@ -10,6 +10,8 @@ import com.cookandroid.mjhackathon.data.repository.postDaily.PostDailyRepository
 import com.cookandroid.mjhackathon.data.repository.postDaily.PostDailyRepositoryImpl
 import com.cookandroid.mjhackathon.data.repository.my.MyRepository
 import com.cookandroid.mjhackathon.data.repository.my.MyRepositoryImpl
+import com.cookandroid.mjhackathon.data.repository.location.CurrentLocationProvider
+import com.cookandroid.mjhackathon.data.repository.location.FusedCurrentLocationProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,6 +20,9 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    abstract fun bindCurrentLocationProvider(impl: FusedCurrentLocationProvider): CurrentLocationProvider
+
 
     @Binds
     abstract fun bindProfileRepository(

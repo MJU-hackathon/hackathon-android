@@ -7,5 +7,4 @@ interface PostDailyRepository {
     suspend fun isPhotoAvailable(photoUri: String): Boolean
     suspend fun saveDiary(request: CreateDiaryRequest): SavedDiary
     suspend fun discardTemporaryPhoto(photoUri: String)
-    suspend fun getSavedDiaries(): List<SavedDiary>
 }

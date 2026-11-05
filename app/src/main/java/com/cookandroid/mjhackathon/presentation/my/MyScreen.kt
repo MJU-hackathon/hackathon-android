@@ -47,6 +47,8 @@ import com.cookandroid.mjhackathon.core.designsystem.component.MjSmallButton
 import com.cookandroid.mjhackathon.core.designsystem.theme.MjHackathonTheme
 import com.cookandroid.mjhackathon.data.model.postDaily.DiaryResult
 import com.cookandroid.mjhackathon.data.model.postDaily.SavedDiary
+import com.cookandroid.mjhackathon.data.model.my.DiaryCollection
+import com.cookandroid.mjhackathon.data.model.my.DiaryMonthGroup
 
 @Composable
 fun MyRoute(
@@ -89,7 +91,8 @@ fun MyScreen(
             ) {
                 Text(uiState.errorMessage, color = colors.textSecondary,
                     style = MjHackathonTheme.typography.body2, textAlign = TextAlign.Center)
-                MjSmallButton(text = "다시 시도", onClick = onRetry)
+                MjSmallButton(text = if (uiState.profileRequired) "프로필 설정하기" else "다시 시도",
+                    onClick = if (uiState.profileRequired) onNavigateToProfile else onRetry)
             }
             uiState.totalCount == 0 -> Box(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -107,7 +110,8 @@ fun MyScreen(
                     item(key = "error") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(uiState.errorMessage, color = colors.textError, style = MjHackathonTheme.typography.caption)
-                            MjSmallButton(text = "다시 시도", onClick = onRetry)
+                            MjSmallButton(text = if (uiState.profileRequired) "프로필 설정하기" else "다시 시도",
+                    onClick = if (uiState.profileRequired) onNavigateToProfile else onRetry)
                         }
                     }
                 }
@@ -192,17 +196,18 @@ class MyPreviewStates : PreviewParameterProvider<MyUiState> {
         SavedDiary("preview-2", "mock-tour", "독립문 앞, 서울의 한 장면", "독립문", DiaryResult.DID,
             "", "역사책에서 본 장소를 직접 걸어봤다.", "2026-11-02T12:00:00+09:00"),
     )
-    private val filled = MyUiState.fromDiaries(samples)
+    private val filled = previewDiaryState(samples)
     override val values = sequenceOf(
         filled,
-        MyUiState.fromDiaries(emptyList()),
+        previewDiaryState(emptyList()),
         MyUiState(),
         MyUiState(isLoading = false, errorMessage = "일기를 불러오지 못했어요. 다시 시도해 주세요."),
+        MyUiState(isLoading = false, errorMessage = "프로필을 먼저 저장해 주세요.", profileRequired = true),
         filled.copy(isLoading = true),
         filled.copy(errorMessage = "새 기록을 불러오지 못했어요. 다시 시도해 주세요."),
-        MyUiState.fromDiaries(samples.map { it.copy(result = DiaryResult.DID, memo = "") }),
-        MyUiState.fromDiaries(samples.map { it.copy(result = DiaryResult.MISSED) }),
-        MyUiState.fromDiaries(samples + samples.first().copy(id = "preview-3", savedAt = "2026-10-31T12:00:00+09:00")),
+        previewDiaryState(samples.map { it.copy(result = DiaryResult.DID, memo = "") }),
+        previewDiaryState(samples.map { it.copy(result = DiaryResult.MISSED) }),
+        previewDiaryState(samples + samples.first().copy(id = "preview-3", savedAt = "2026-10-31T12:00:00+09:00")),
     )
 }
 
@@ -213,3 +218,15 @@ private fun MyScreenPreview(@PreviewParameter(MyPreviewStates::class) state: MyU
         MyScreen(state, onNavigateToHome = {}, onNavigateToProfile = {}, onRetry = {})
     }
 }
+
+/** Preview에서만 사용하는 서버 응답 형태의 고정 샘플. */
+private fun previewDiaryState(diaries: List<SavedDiary>): MyUiState = MyUiState.fromCollection(
+    DiaryCollection(
+        totalCount = diaries.size,
+        experiencedCount = diaries.count { it.result == DiaryResult.DID },
+        notExperiencedCount = diaries.count { it.result == DiaryResult.MISSED },
+        groups = diaries.groupBy { it.savedAt.take(7) }.map { (month, entries) ->
+            DiaryMonthGroup(month, entries)
+        },
+    ),
+)

@@ -9,26 +9,19 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -42,10 +35,12 @@ import com.cookandroid.mjhackathon.core.designsystem.component.MjChip
 import com.cookandroid.mjhackathon.core.designsystem.component.MjTextField
 import com.cookandroid.mjhackathon.core.designsystem.component.MjTextFieldType
 import com.cookandroid.mjhackathon.core.designsystem.theme.MjHackathonTheme
-import com.cookandroid.mjhackathon.core.util.noRippleClickable
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import com.cookandroid.mjhackathon.core.designsystem.component.MjBirthDatePicker
+import com.cookandroid.mjhackathon.core.designsystem.component.MjStayPeriodPicker
+import com.cookandroid.mjhackathon.core.designsystem.component.MjStayDateField
 
 @Composable
 fun ProfileRoute(
@@ -70,7 +65,10 @@ fun ProfileRoute(
         onStateChange = viewModel::updateState,
         onNavigateToBack = navigateToBack,
         onSaveClick = viewModel::saveProfile,
-        modifier = Modifier.padding(paddingValues),
+        // Scaffold에서 적용한 시스템 여백은 imePadding에서 다시 계산하지 않는다.
+        modifier = Modifier
+            .padding(paddingValues)
+            .consumeWindowInsets(paddingValues),
     )
 }
 
@@ -229,82 +227,36 @@ fun ProfileScreen(
         }
     }
 
-    uiState.activeDateField?.let { field ->
-        key(field) {
-            ProfileDateDialog(
-                field = field,
-                value = when (field) {
-                    ProfileDateField.BIRTHDAY -> uiState.birthday
-                    ProfileDateField.STAY_START -> uiState.stayStart
-                    ProfileDateField.STAY_END -> uiState.stayEnd
-                },
-                onDismiss = { onStateChange(uiState.copy(activeDateField = null)) },
-                onConfirm = { date ->
-                    val updated = when (field) {
-                        ProfileDateField.BIRTHDAY -> uiState.copy(birthday = date)
-                        ProfileDateField.STAY_START -> uiState.copy(stayStart = date)
-                        ProfileDateField.STAY_END -> uiState.copy(stayEnd = date)
-                    }
-                    onStateChange(updated.copy(activeDateField = null))
-                },
-            )
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(uiState.activeDateField) {
+        if (uiState.activeDateField != null) {
+            focusManager.clearFocus()
+            keyboard?.hide()
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ProfileDateDialog(
-    field: ProfileDateField,
-    value: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    val initialDate = runCatching {
-        LocalDate.parse(value).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-    }.getOrNull()
-    val dateState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            ProfileDialogAction("확인", enabled = dateState.selectedDateMillis != null) {
-                dateState.selectedDateMillis?.let {
-                    onConfirm(
-                        Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
-                    )
-                }
-            }
-        },
-        dismissButton = { ProfileDialogAction("취소", onClick = onDismiss) },
-    ) {
-        DatePicker(
-            state = dateState,
-            title = {
-                Text(
-                    text = when (field) {
-                        ProfileDateField.BIRTHDAY -> "생년월일 선택"
-                        ProfileDateField.STAY_START -> "체류 시작일 선택"
-                        ProfileDateField.STAY_END -> "귀국 예정일 선택"
-                    },
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp),
-                )
+    val dismissPicker = { onStateChange(uiState.copy(activeDateField = null)) }
+    when (uiState.activeDateField) {
+        ProfileDateField.BIRTHDAY -> MjBirthDatePicker(
+            initialDate = uiState.birthday.toProfileDate(),
+            onDismiss = dismissPicker,
+            onConfirm = { onStateChange(uiState.copy(birthday = it.toString(), activeDateField = null)) },
+        )
+        ProfileDateField.STAY_START, ProfileDateField.STAY_END -> MjStayPeriodPicker(
+            initialStart = uiState.stayStart.toProfileDate(),
+            initialEnd = uiState.stayEnd.toProfileDate(),
+            initialField = if (uiState.activeDateField == ProfileDateField.STAY_END)
+                MjStayDateField.End else MjStayDateField.Start,
+            onDismiss = dismissPicker,
+            onConfirm = { start, end ->
+                onStateChange(uiState.copy(stayStart = start.toString(), stayEnd = end.toString(), activeDateField = null))
             },
         )
+        null -> Unit
     }
 }
 
-@Composable
-private fun ProfileDialogAction(text: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Text(
-        text = text,
-        modifier = Modifier
-            .semantics { role = Role.Button }
-            .then(if (enabled) Modifier.noRippleClickable(onClick) else Modifier)
-            .padding(16.dp),
-        color = if (enabled) MjHackathonTheme.colors.textBrand else MjHackathonTheme.colors.textDisabled,
-        style = MjHackathonTheme.typography.buttonM,
-    )
-}
+private fun String.toProfileDate(): LocalDate? = runCatching { LocalDate.parse(this) }.getOrNull()
 
 class ProfilePreviewProvider : PreviewParameterProvider<ProfileState> {
     private val filled = ProfileState(
@@ -339,5 +291,14 @@ private fun ProfileScreenPreview(@PreviewParameter(ProfilePreviewProvider::class
 private fun InitialProfileScreenPreview(@PreviewParameter(ProfilePreviewProvider::class) state: ProfileState) {
     MjHackathonTheme {
         ProfileScreen(uiState = state, showTopBar = false)
+    }
+}
+
+// 키보드로 가용 높이가 줄어든 레이아웃 확인용. 실제 IME inset은 기기에서 확인한다.
+@Preview(name = "프로필 - 입력 중 작은 높이", widthDp = 390, heightDp = 480, showBackground = true)
+@Composable
+private fun CompactProfileScreenPreview() {
+    MjHackathonTheme {
+        ProfileScreen(uiState = ProfileState(nickname = "태훈"))
     }
 }

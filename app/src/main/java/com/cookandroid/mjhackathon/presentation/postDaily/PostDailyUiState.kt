@@ -15,13 +15,14 @@ data class PostDailyUiState(
     val isSaving: Boolean = false,
     val isCancelling: Boolean = false,
     val saveError: String? = null,
+    val saveBlocked: Boolean = false,
     val savedDiaryId: String? = null,
     val isCancelled: Boolean = false,
 ) {
     val memoLength: Int get() = memo.codePointCount(0, memo.length)
     val isBusy: Boolean get() = isSaving || isCancelling
     val canSave: Boolean get() = !isLoading && loadError == null && !isBusy &&
-            savedDiaryId == null && !isCancelled && result != null && hasPhoto && memoLength <= MAX_MEMO_LENGTH
+            savedDiaryId == null && !isCancelled && !saveBlocked && result != null && hasPhoto && memoLength <= MAX_MEMO_LENGTH
 
     companion object {
         const val MAX_MEMO_LENGTH = 50

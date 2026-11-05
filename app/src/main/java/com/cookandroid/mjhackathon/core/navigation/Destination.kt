@@ -12,7 +12,10 @@ data class Detail(val questId: String)
 data class Profile(val isInitialSetup: Boolean = false)
 
 @Serializable
-data class PostDaily(val questId: String, val photoUri: String)
+data class PostDaily(
+    val questId: String, val photoUri: String,
+    val draftId: String, val draftStartedAt: String,
+)
 
 @Serializable
 data object My

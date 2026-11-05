@@ -1,8 +1,6 @@
 package com.cookandroid.mjhackathon.data.service.profile
 
 import com.cookandroid.mjhackathon.data.dto.base.BaseResponse
-import com.cookandroid.mjhackathon.data.dto.profile.request.ExampleRequest
-import com.cookandroid.mjhackathon.data.dto.profile.response.ExampleResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -14,12 +12,4 @@ import com.cookandroid.mjhackathon.data.dto.profile.response.ProfileResponse
 interface ProfileService {
     @PUT("api/profile")
     suspend fun saveProfile(@Body request: SaveProfileRequest): BaseResponse<ProfileResponse>
-
-    @GET("api/v1/data")
-    suspend fun getExampleData(): BaseResponse<List<ExampleResponse>>
-
-    @POST("api/v1/data")
-    suspend fun postExampleData(
-        @Body exampleRequestDto: ExampleRequest,
-    ): BaseResponse<Unit>
 }

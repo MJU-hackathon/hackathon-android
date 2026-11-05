@@ -1,5 +1,6 @@
 package com.cookandroid.mjhackathon.core.designsystem.component
 
+import coil3.compose.AsyncImage
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,6 +38,9 @@ fun MjQuestCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     @DrawableRes thumbnailRes: Int? = null,
+    imageUrl: String? = null,
+    estimatedMinutes: Int = 0,
+    reason: String = "",
 ) {
     val colors = MjHackathonTheme.colors
     val typography = MjHackathonTheme.typography
@@ -60,7 +64,14 @@ fun MjQuestCard(
                 .background(colors.bgMuted),
             contentAlignment = Alignment.Center,
         ) {
-            if (thumbnailRes == null) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl, contentDescription = null,
+                    modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.ic_gallery),
+                    error = painterResource(R.drawable.ic_gallery),
+                )
+            } else if (thumbnailRes == null) {
                 Icon(
                     painter = painterResource(R.drawable.ic_gallery),
                     contentDescription = null,
@@ -82,7 +93,7 @@ fun MjQuestCard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = category,
+                text = if (estimatedMinutes > 0) "$category · ${estimatedMinutes}분" else category,
                 modifier = Modifier
                     .background(colors.bgAccentSubtle, RoundedCornerShape(6.dp))
                     .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -99,6 +110,11 @@ fun MjQuestCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+
+            if (reason.isNotBlank()) {
+                Text(reason, color = colors.textSecondary, style = typography.caption,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -156,5 +172,14 @@ private fun MjQuestCardLongTextPreview() {
                 onClick = {},
             )
         }
+    }
+}
+
+@Preview(name = "MjQuestCard - 서버 퀘스트", widthDp = 360, showBackground = true)
+@Composable
+private fun MjQuestCardServerPreview() {
+    MjHackathonTheme {
+        MjQuestCard(title = "시장 먹거리 탐험", category = "FOOD", location = "영천시장",
+            onClick = {}, estimatedMinutes = 30, reason = "음식에 관심이 있는 당신에게 추천해요")
     }
 }

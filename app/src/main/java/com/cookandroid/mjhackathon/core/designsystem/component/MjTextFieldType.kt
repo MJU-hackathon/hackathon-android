@@ -26,11 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,9 +55,7 @@ import androidx.compose.ui.unit.dp
 import com.cookandroid.mjhackathon.R
 import com.cookandroid.mjhackathon.core.designsystem.theme.MjHackathonTheme
 import com.cookandroid.mjhackathon.core.util.noRippleClickable
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 enum class MjTextFieldType {
     Text,
@@ -411,7 +405,6 @@ private fun MjTextFieldAllTypesPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MjTextFieldInteractiveSample(
     type: MjTextFieldType,
@@ -448,49 +441,10 @@ private fun MjTextFieldInteractiveSample(
     )
 
     if (showDatePicker) {
-        val initialDate = remember(value) {
-            runCatching {
-                LocalDate.parse(value).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            }.getOrNull()
-        }
-        val dateState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                val selectedMillis = dateState.selectedDateMillis
-                Text(
-                    text = "확인",
-                    color = if (selectedMillis != null) colors.textBrand else colors.textDisabled,
-                    style = MjHackathonTheme.typography.buttonM,
-                    modifier = Modifier
-                        .then(
-                            if (selectedMillis != null) {
-                                Modifier.noRippleClickable {
-                                    value = Instant.ofEpochMilli(selectedMillis)
-                                        .atZone(ZoneOffset.UTC)
-                                        .toLocalDate()
-                                        .toString()
-                                    showDatePicker = false
-                                }
-                            } else {
-                                Modifier
-                            },
-                        )
-                        .padding(16.dp),
-                )
-            },
-            dismissButton = {
-                Text(
-                    text = "취소",
-                    color = colors.textSecondary,
-                    style = MjHackathonTheme.typography.buttonM,
-                    modifier = Modifier
-                        .noRippleClickable { showDatePicker = false }
-                        .padding(16.dp),
-                )
-            },
-        ) {
-            DatePicker(state = dateState)
-        }
+        MjBirthDatePicker(
+            initialDate = runCatching { LocalDate.parse(value) }.getOrNull(),
+            onDismiss = { showDatePicker = false },
+            onConfirm = { value = it.toString(); showDatePicker = false },
+        )
     }
 }
