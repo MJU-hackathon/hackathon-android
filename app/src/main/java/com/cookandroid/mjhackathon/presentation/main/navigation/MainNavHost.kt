@@ -5,7 +5,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.input.key.Key.Companion.Home
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.cookandroid.mjhackathon.core.navigation.Detail
@@ -59,7 +58,6 @@ fun MainNavHost(
             DetailRoute(
                 paddingValues = paddingValues,
                 navigateToBack = { navController.popBackStack() },
-                viewModel = TODO(),
             )
         }
     }
