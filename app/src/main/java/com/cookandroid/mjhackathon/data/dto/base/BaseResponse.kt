@@ -12,4 +12,6 @@ data class BaseResponse<T>(
     val message: String,
     @SerialName("data")
     val data: T,
+    @SerialName("status")
+    val status: Int? = null,
 )

@@ -17,10 +17,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -55,13 +56,20 @@ fun ProfileRoute(
     showTopBar: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onSaved by rememberUpdatedState(onSaveProfile)
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) {
+            viewModel.consumeSaveSuccess()
+            onSaved(uiState)
+        }
+    }
 
     ProfileScreen(
         uiState = uiState,
         showTopBar = showTopBar,
         onStateChange = viewModel::updateState,
         onNavigateToBack = navigateToBack,
-        onSaveClick = { if (uiState.canSave) onSaveProfile(uiState) },
+        onSaveClick = viewModel::saveProfile,
         modifier = Modifier.padding(paddingValues),
     )
 }
@@ -75,8 +83,8 @@ fun ProfileScreen(
     onStateChange: (ProfileState) -> Unit = {},
     onNavigateToBack: () -> Unit = {},
     onSaveClick: () -> Unit = {},
-    languages: List<String> = listOf("한국어", "English", "日本語", "中文"),
-    interestOptions: List<String> = listOf("KPOP", "드라마", "영화", "뷰티", "음식", "웹툰", "게임", "패션", "관광"),
+    languages: List<String> = profileLocales.keys.toList(),
+    interestOptions: List<String> = profileInterests.keys.toList(),
     showTopBar: Boolean = true,
 ) {
     val colors = MjHackathonTheme.colors
@@ -121,40 +129,20 @@ fun ProfileScreen(
                 isError = uiState.nicknameError,
             )
 
-            Box {
-                MjTextField(
-                    value = uiState.language,
-                    onValueChange = {},
-                    label = "사용 언어",
-                    helperText = "선택한 언어로 화면과 퀘스트 안내가 바뀌어요",
-                    type = MjTextFieldType.Dropdown,
-                    onClick = { onStateChange(uiState.copy(languageMenuExpanded = true)) },
-                )
-                DropdownMenu(
-                    expanded = uiState.languageMenuExpanded,
-                    onDismissRequest = { onStateChange(uiState.copy(languageMenuExpanded = false)) },
-                ) {
-                    languages.forEach { language ->
-                        Text(
-                            text = language,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics { role = Role.Button }
-                                .noRippleClickable {
-                                    onStateChange(
-                                        uiState.copy(
-                                            language = language,
-                                            languageMenuExpanded = false
-                                        )
-                                    )
-                                }
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
-                            color = colors.textPrimary,
-                            style = typography.body1,
-                        )
-                    }
-                }
-            }
+            MjTextField(
+                value = uiState.language,
+                onValueChange = { language ->
+                    onStateChange(uiState.copy(language = language, languageMenuExpanded = false))
+                },
+                label = "사용 언어",
+                helperText = "사용할 언어를 선택해 주세요",
+                type = MjTextFieldType.Dropdown,
+                dropdownOptions = languages,
+                dropdownExpanded = uiState.languageMenuExpanded,
+                onDropdownExpandedChange = { expanded ->
+                    onStateChange(uiState.copy(languageMenuExpanded = expanded))
+                },
+            )
 
             MjTextField(
                 value = uiState.birthday,
@@ -228,7 +216,16 @@ fun ProfileScreen(
             .fillMaxWidth()
             .background(colors.bgSurface)
             .padding(16.dp)) {
-            MjButton(text = "정보 저장하기", onClick = onSaveClick, enabled = uiState.canSave)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                uiState.saveErrorMessage?.let { message ->
+                    Text(message, color = colors.textError, style = typography.caption)
+                }
+                MjButton(
+                    text = if (uiState.isSaving) "저장 중…" else "정보 저장하기",
+                    onClick = onSaveClick,
+                    enabled = uiState.canSave && !uiState.isSaving && !uiState.isSaved,
+                )
+            }
         }
     }
 
@@ -317,6 +314,8 @@ class ProfilePreviewProvider : PreviewParameterProvider<ProfileState> {
     override val values = sequenceOf(
         ProfileState(),
         filled,
+        filled.copy(isSaving = true),
+        filled.copy(saveErrorMessage = "정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요."),
         filled.copy(nickname = "안"),
         filled.copy(stayEnd = "2026-08-01"),
         filled.copy(interests = emptySet()),

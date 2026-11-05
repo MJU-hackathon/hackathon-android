@@ -24,11 +24,19 @@ import kotlin.jvm.java
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
+    fun provideOkHttpClient(userKeyStore: UserKeyStore): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                chain.proceed(
+                    chain.request().newBuilder()
+                        .header("X-User-Key", userKeyStore.getOrCreate())
+                        .build()
+                )
+            }
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {
+                        redactHeader("X-User-Key")
                         level = HttpLoggingInterceptor.Level.BODY
                     })
                 }
