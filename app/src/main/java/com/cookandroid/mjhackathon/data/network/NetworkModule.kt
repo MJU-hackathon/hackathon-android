@@ -35,10 +35,24 @@ object NetworkModule {
             }
             .apply {
                 if (BuildConfig.DEBUG) {
-                    addInterceptor(HttpLoggingInterceptor().apply {
+                    val headerLogger = HttpLoggingInterceptor().apply {
                         redactHeader("X-User-Key")
                         level = HttpLoggingInterceptor.Level.HEADERS
-                    })
+                    }
+                    val questBodyLogger = HttpLoggingInterceptor().apply {
+                        redactHeader("X-User-Key")
+                        level = HttpLoggingInterceptor.Level.BODY
+                    }
+                    addInterceptor { chain ->
+                        val path = chain.request().url.encodedPath
+                        val logger = if (
+                            path.endsWith("/api/daily-quests/today") ||
+                            path.endsWith("/api/daily-quests/ensure") ||
+                            (chain.request().method == "GET" &&
+                                Regex("/api/quests/[0-9]+$").containsMatchIn(path))
+                        ) questBodyLogger else headerLogger
+                        logger.intercept(chain)
+                    }
                 }
             }
             .build()

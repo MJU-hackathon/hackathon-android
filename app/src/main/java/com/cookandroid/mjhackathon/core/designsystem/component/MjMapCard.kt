@@ -1,5 +1,7 @@
 package com.cookandroid.mjhackathon.core.designsystem.component
 
+import android.util.Log
+import com.cookandroid.mjhackathon.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -160,6 +162,10 @@ private fun MjMapCardMap(
     }
 
     LaunchedEffect(targetPosition, zoom) {
+        if (BuildConfig.DEBUG) {
+            Log.d("DetailMap", "Map target: latitude=${targetPosition.latitude}, " +
+                "longitude=${targetPosition.longitude}, zoom=$zoom")
+        }
         cameraState.position = CameraPosition.fromLatLngZoom(targetPosition, zoom)
     }
 
@@ -169,6 +175,9 @@ private fun MjMapCardMap(
         uiSettings = uiSettings,
         contentDescription = "$placeName 위치 지도",
         onMapClick = { onClick() },
+        onMapLoaded = {
+            if (BuildConfig.DEBUG) Log.d("DetailMap", "Map loaded: target=$targetPosition")
+        },
     ) {
         MarkerComposable(
             colors.bgAccent,

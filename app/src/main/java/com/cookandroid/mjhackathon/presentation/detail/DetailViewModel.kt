@@ -1,5 +1,7 @@
 package com.cookandroid.mjhackathon.presentation.detail
 
+import android.util.Log
+import com.cookandroid.mjhackathon.BuildConfig
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,11 +41,16 @@ class DetailViewModel @Inject constructor(
             try {
                 require(questId.isNotBlank())
                 val quest = detailRepository.getQuestDetail(questId, localeStore.getLocale())
+                if (BuildConfig.DEBUG) {
+                    Log.d("DetailMap", "questId=$questId, latitude=${quest.latitude}, " +
+                        "longitude=${quest.longitude}, hasMapCoordinates=${quest.hasMapCoordinates}")
+                }
                 check(quest.id == questId) { "퀘스트 정보가 일치하지 않습니다." }
                 _uiState.value = DetailUiState(isLoading = false, quest = quest)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
+                if (BuildConfig.DEBUG) Log.e("DetailMap", "Detail load failed: questId=$questId", error)
                 _uiState.value = DetailUiState(isLoading = false, loadError = error.detailMessage())
             }
         }
